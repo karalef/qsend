@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Success</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h4 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #4CAF50;
+        }
+        #container {
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 70%;
+            background-color: #4CAF5077;
+        }
+        p {
+            font-size: 18px;
+            color: white;
+            text-align: center;
+            display: inline;
+        }
+    </style>
+</head>
+<body>
+    <h4>Done!</h4>
+    <div id="container">
+        <p>Successfully transferred to: {{.Output}}.</p>
+    </div>
+</body>
+</html>

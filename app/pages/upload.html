@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>File Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+
+        label {
+            font-size: 14px;
+        }
+
+        .card {
+            width: fit-content;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        #progress-bars {
+            margin-top: 20px;
+        }
+
+        .progress-bar-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .percentage {
+            font-weight: bold;
+            margin-left: 20px;
+        }
+
+        .progress-bar {
+            width: 200px;
+            height: 10px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #eee;
+            margin-left: 5px;
+        }
+
+        .progress-bar-fill {
+            height: 10px;
+            background-color: #4CAF50;
+            border-radius: 10px;
+            width: 0%;
+        }
+
+        .upload-button {
+            background-color: #4CAF50;
+            color: #fff;
+            margin: 0 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: default;
+        }
+
+        .upload-button:hover {
+            background-color: #4CAF50AA;
+            color: #000;
+            cursor: pointer;
+        }
+
+        .upload-button:disabled,
+        .upload-button:disabled:hover {
+            background-color: #ccc;
+            color: #000;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <div class="card-header">
+            <h1>Upload Files</h1>
+        </div>
+        <div class="card-body">
+            <div style="display: flex; justify-content: space-between; align-items: center">
+                <input type="file" id="file" multiple>
+                <button id="upload-button" class="upload-button" disabled>Upload</button>
+            </div>
+            <div id="progress-bars"></div>
+            <div id="error" style="color: red;"></div>
+        </div>
+    </div>
+    <script src="https://unpkg.com/axios@1.6.7/dist/axios.min.js"></script>
+    <script>
+        const fileInput = document.getElementById('file');
+        const uploadButton = document.getElementById('upload-button');
+        const progressBarsContainer = document.getElementById('progress-bars');
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                uploadButton.disabled = false;
+            } else {
+                uploadButton.disabled = true;
+            }
+        });
+
+        uploadButton.addEventListener('click', () => {
+            const files = fileInput.files;
+            const totalFiles = files.length;
+            let sent = 0;
+
+            const abortController = new AbortController();
+            
+            for (let i = 0; i < totalFiles; i++) {
+                const fileName = files[i].name;
+                const progressBarHtml = `
+                    <div class="progress-bar-container">
+                        <label>${fileName}</label>
+                        <div>
+                            <label class="percentage">0%</label>
+                            <div class="progress-bar"><div class="progress-bar-fill"></div>
+                        </div>
+                    </div>
+                `;
+                progressBarsContainer.insertAdjacentHTML('beforeend', progressBarHtml);
+
+                // Upload the file and update the progress bar
+                const file = files[i];
+                const progressBar = progressBarsContainer.children[i];
+                progressBar.children[0].textContent = fileName;
+                const progressBarPercentage = progressBar.children[1].children[0];
+                const progressBarFill = progressBar.children[1].children[1].children[0];
+
+                const blob = new Blob([file], { type: file.type });
+
+                var config = {
+                    headers: {
+                        'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(fileName)}`,
+                    },
+                    onUploadProgress: function (e) {
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        progressBarFill.style.width = `${percent}%`;
+                        progressBarPercentage.textContent = `${percent}%`;
+                    },
+                    signal: abortController.signal
+                };
+                axios.post('{{.Route}}', blob, config)
+                    .then(function (res) {
+                        sent++;
+                        if (sent === totalFiles) {
+                            setTimeout(() => {
+                                window.location.href = "/done";
+                            }, 500)
+                        }
+                    })
+                    .catch(function (err) {
+                        if (axios.isCancel(err)) {
+                            return
+                        }
+                        abortController.abort();
+                        window.location.href = "/failed?error=" + err;
+                    });
+            }
+        });
+    </script>
+</body>
+
+</html>
