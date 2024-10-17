@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"qsend/app"
 
@@ -28,12 +27,8 @@ func receiveRun(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	a, err := app.New(appName, cfg)
-	if err != nil {
-		return err
-	}
 
-	u, srv, err := a.Receive(context.Background())
+	u, srv, err := app.New(appName, cfg).Receive(cmd.Root().Context())
 	if err != nil {
 		return err
 	}

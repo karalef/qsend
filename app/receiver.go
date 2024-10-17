@@ -15,9 +15,6 @@ import (
 	"qsend/server"
 	"strconv"
 	"strings"
-	"time"
-
-	"github.com/cheggaaa/pb/v3"
 )
 
 func (a *App) Receive(ctx context.Context) (string, *server.Server, error) {
@@ -72,8 +69,9 @@ func (a *App) handleSend(w http.ResponseWriter, r *http.Request) {
 		WriteError(w, http.StatusBadRequest, err, "invalid content length")
 		return
 	}
-	bar := pb.New64(length).SetTemplate(pbTemplate).SetRefreshRate(time.Millisecond * 100)
-	_, err = io.Copy(out, bar.Start().NewProxyReader(r.Body))
+	bar, reader := NewPBReader(length, r.Body)
+	bar.Start()
+	_, err = io.Copy(out, reader)
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, err, "unable to transfer file")
 		return

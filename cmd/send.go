@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"archive/zip"
-	"context"
 	"fmt"
 	"io"
 	"io/fs"
@@ -34,10 +33,6 @@ func sendRun(command *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	a, err := app.New(appName, cfg)
-	if err != nil {
-		return err
-	}
 	file, temp, err := fileFromArgs(args)
 	if err != nil {
 		return err
@@ -45,7 +40,7 @@ func sendRun(command *cobra.Command, args []string) error {
 	if temp {
 		defer os.Remove(file)
 	}
-	u, srv, err := a.Send(context.Background(), file)
+	u, srv, err := app.New(appName, cfg).Send(command.Root().Context(), file)
 	if err != nil {
 		return err
 	}

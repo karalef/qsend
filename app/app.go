@@ -2,17 +2,17 @@ package app
 
 import (
 	"fmt"
+	"image"
+	"io"
+	"log"
 	"net/http"
 	"qsend/config"
 	"qsend/server"
+	"time"
 
 	"github.com/cheggaaa/pb/v3"
+	"github.com/skip2/go-qrcode"
 )
-
-type Flags struct {
-	config.Config
-	ConfigPath string
-}
 
 type App struct {
 	cfg config.Config
@@ -22,16 +22,11 @@ type App struct {
 	filepath string
 }
 
-func New(name string, cfg config.Config) (*App, error) {
-	srv, err := server.New(name)
-	if err != nil {
-		return nil, err
-	}
-
+func New(name string, cfg config.Config) *App {
 	return &App{
 		cfg: cfg,
-		srv: srv,
-	}, nil
+		srv: server.New(name),
+	}
 }
 
 func WriteError(w http.ResponseWriter, code int, err error, wrap string) {
@@ -40,3 +35,26 @@ func WriteError(w http.ResponseWriter, code int, err error, wrap string) {
 }
 
 var pbTemplate pb.ProgressBarTemplate = `{{bar . }} {{percent . }} {{speed . }} {{rtime . "ETA %s"}}`
+
+func NewPBReader(total int64, reader io.Reader) (*pb.ProgressBar, io.Reader) {
+	bar := pb.New64(total).SetTemplate(pbTemplate).SetRefreshRate(time.Millisecond * 100)
+	return bar, bar.NewProxyReader(reader)
+}
+
+// QRString returns the QR code as a string.
+func QRString(s string, inverseColor bool) string {
+	q, err := qrcode.New(s, qrcode.Medium)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return q.ToSmallString(inverseColor)
+}
+
+// QRImage returns a QR code as an image.Image
+func QRImage(s string) image.Image {
+	q, err := qrcode.New(s, qrcode.Medium)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return q.Image(256)
+}

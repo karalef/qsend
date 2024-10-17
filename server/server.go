@@ -12,7 +12,7 @@ import (
 )
 
 // New creates a new server.
-func New(appname string) (*Server, error) {
+func New(appname string) *Server {
 	sessionBytes := make([]byte, 32)
 	if _, err := rand.Read(sessionBytes); err != nil {
 		panic(err)
@@ -38,7 +38,7 @@ func New(appname string) (*Server, error) {
 				},
 			},
 		},
-	}, nil
+	}
 }
 
 // Server is the http server which is allow only the first client to connect.

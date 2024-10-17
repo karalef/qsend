@@ -1,7 +1,10 @@
 package cmd
 
 import (
+	"context"
+	"os/signal"
 	"qsend/config"
+	"syscall"
 
 	"github.com/spf13/cobra"
 )
@@ -66,9 +69,11 @@ var rootCmd = &cobra.Command{
 
 // Execute is the main entry point for the CLI.
 func Execute() error {
-	if err := rootCmd.Execute(); err != nil {
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		rootCmd.PrintErrf("Error: %v\nRun `qsend help` for help.\n", err)
 		return err
 	}
+	stop()
 	return nil
 }
